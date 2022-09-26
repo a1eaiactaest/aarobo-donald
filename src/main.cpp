@@ -40,6 +40,7 @@ int get_distance(){
 
 int optical_sensor(){
   int sensor_val = analogRead(PIN_OPT_SENSOR);
+
   return sensor_val;
 }
 
@@ -52,6 +53,11 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(optical_sensor());
-  delay(1000);
+  int x = optical_sensor();
+
+  if (x > 50 && x < 150) {
+    Serial.println("Czarno");
+  } else if (x > 150) {
+    Serial.println("Bialo");
+  }
 }
