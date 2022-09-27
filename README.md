@@ -18,10 +18,10 @@ The biggest and scariest sumo robot at BSR.
   - Features:
   - Operating Voltage: 5V
   - Working Current: 15 mA
-  - Distance Range: 2cm to 400cm
+  - Theoretical Distance Range: 2cm to 400cm
+  - Practical Distance Range: 2 to 80cm
   - Reference: [https://www.osepp.com/electronic-modules/sensor-modules/62-osepp-ultrasonic-sensor-module]
-
-
+  - Reference: [https://components101.com/sensors/ultrasonic-sensor-working-pinout-datasheet]
 
 ### Reflective Optical Sensor
 
