@@ -15,7 +15,7 @@ The biggest and scariest sumo robot at BSR.
 ### Ultrasonic Ranging
 
 * [Datasheet](https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf)
-  - Features:
+* Features:
   - Operating Voltage: 5V
   - Working Current: 15 mA
   - Theoretical Distance Range: 2cm to 400cm
