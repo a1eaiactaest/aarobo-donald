@@ -2,7 +2,14 @@
 #include <assert.h>
 #include <AFMotor.h>
 
-#define PIN_OPT_SENSOR A0
+// front-right
+#define PIN_OPT_SENSOR_FR A0
+// front-left
+#define PIN_OPT_SENSOR_FL A1
+// rear-right
+#define PIN_OPT_SENSOR_RR A2
+// rear-left
+#define PIN_OPT_SENSOR_RL A3
 
 #define PIN_FRONT_RANGE_ECHO 2
 #define PIN_FRONT_RANGE_TRIGGER 3
@@ -111,7 +118,7 @@ int read_ROS(int analog_pin){
    * @param analog_pin Arduino analog pin e.g.: A0, A1, AX...
    */
 
-  int sensor_val = analogRead(PIN_OPT_SENSOR);
+  int sensor_val = analogRead(analog_pin);
   return sensor_val;
 }
 
@@ -126,6 +133,14 @@ String read_US(){
   return buf;
 }
 
+bool on_the_edge(){
+  /**
+   * @brief Return true if device is on the edge of arena. (detects white line)
+   * 
+   */
+
+}
+
 void setup() {
   for (int i=0; i<3; i++){
     pinMode(get_struct_echo(echoes, i), INPUT);
@@ -137,6 +152,10 @@ void setup() {
 }
 
 void loop() {
+  Serial.println(read_ROS(PIN_OPT_SENSOR_FR));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_FL));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_RR));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_RL));
   Serial.println(read_US());
   delay(1000);
 }
