@@ -115,26 +115,28 @@ int read_ROS(int analog_pin){
   return sensor_val;
 }
 
+String read_US(){
+  char buf[40];
+
+  int front_cm = get_distance(FRONT_RANGE);
+  int right_cm = get_distance(RIGHT_RANGE);
+  int left_cm = get_distance(LEFT_RANGE);
+
+  snprintf(buf, sizeof(buf), "FRONT: %d, RIGHT: %d, LEFT: %d", front_cm, right_cm, left_cm);
+  return buf;
+}
+
 void setup() {
   for (int i=0; i<3; i++){
     pinMode(get_struct_echo(echoes, i), INPUT);
     pinMode(get_struct_trigger(triggers, i), OUTPUT);
   }
 
-
   Serial.begin(9600);
   Serial.println("Serial init");
 }
 
 void loop() {
-  char buf[16];
-
-  int dis1 = get_distance(FRONT_RANGE);
-  int dis2 = get_distance(RIGHT_RANGE);
-  int dis3 = get_distance(LEFT_RANGE);
-  Serial.println(dis1);
-  snprintf(buf, sizeof(buf), "%d %d %d", dis1, dis2, dis3);
-
-  Serial.println(buf);
-  delay(10);
+  Serial.println(read_US());
+  delay(1000);
 }
