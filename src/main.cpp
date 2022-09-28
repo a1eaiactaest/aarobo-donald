@@ -4,14 +4,14 @@
 
 #define PIN_OPT_SENSOR A0
 
-#define PIN_FRONT_RANGE_TRIGGER 2
-#define PIN_FRONT_RANGE_ECHO 5
+#define PIN_FRONT_RANGE_ECHO 2
+#define PIN_FRONT_RANGE_TRIGGER 3
 
-#define PIN_RIGHT_RANGE_TRIGGER 3
-#define PIN_RIGHT_RANGE_ECHO 6
+#define PIN_RIGHT_RANGE_ECHO 4
+#define PIN_RIGHT_RANGE_TRIGGER 5
 
-#define PIN_LEFT_RANGE_TRIGGER 4
-#define PIN_LEFT_RANGE_ECHO 7
+#define PIN_LEFT_RANGE_ECHO 6
+#define PIN_LEFT_RANGE_TRIGGER 7
 
 #define FRONT_RANGE 1
 #define RIGHT_RANGE 2
@@ -121,19 +121,6 @@ void setup() {
     pinMode(get_struct_trigger(triggers, i), OUTPUT);
   }
 
-  /*
-  // FRONT
-  pinMode(PIN_FRONT_RANGE_ECHO, INPUT);
-  pinMode(PIN_FRONT_RANGE_TRIGGER, OUTPUT);
-
-  // RIGHT
-  pinMode(PIN_RIGHT_RANGE_ECHO, INPUT);
-  pinMode(PIN_RIGHT_RANGE_TRIGGER, OUTPUT);
-
-  // LEFT
-  pinMode(PIN_LEFT_RANGE_ECHO, INPUT);
-  pinMode(PIN_LEFT_RANGE_TRIGGER, OUTPUT);
-  */
 
   Serial.begin(9600);
   Serial.println("Serial init");
