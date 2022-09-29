@@ -22,7 +22,6 @@
 #define RIGHT_RANGE 2
 #define LEFT_RANGE 3
 
-
 // Motors with 2x L298N motor drivers
 // left
 #define PIN_MOTOR1P1 8
@@ -176,6 +175,7 @@ String read_US(){
   return buf;
 }
 
+// TODO
 bool on_the_edge(){
   /**
    * @brief Return true if device is on the edge of arena. (detects white line)
@@ -183,7 +183,6 @@ bool on_the_edge(){
    */
   return true;
 }
-
 
 void motor_forward(MOTOR motor, bool reverse){
   for (int i=0; i<2; i++){
@@ -222,6 +221,9 @@ void motors_run(bool reverse){
 
 
 void motors_stop(){
+  /**
+   * @brief Turn off all motors in motors struct.
+   */
   for (int i=0; i<6; i++){
     MOTOR cmotor = get_struct_motors(motors, i);
     digitalWrite(cmotor.pin1, LOW);
@@ -300,4 +302,9 @@ void loop() {
   motors_run(false); //forward
   delay(10000);
   motors_run(true); // back
+  delay(10000);
+  motors_stop();
+  delay(10000);
 }
+
+
