@@ -184,41 +184,26 @@ bool on_the_edge(){
   return true;
 }
 
-void motor_forward(MOTOR motor, bool reverse){
-  for (int i=0; i<2; i++){
-    if (!reverse){
-      digitalWrite(motor.pin1, HIGH);
-      digitalWrite(motor.pin2, LOW);
-    } else {
-      digitalWrite(motor.pin1, LOW);
-      digitalWrite(motor.pin2, HIGH);
-    }
-  }
+void motor_forward(MOTOR motor){
+  digitalWrite(motor.pin1, HIGH);
+  digitalWrite(motor.pin2, LOW);
 }
 
-void motor_back(MOTOR motor, bool reverse){
-  for (int i=0; i<2; i++){
-    if (!reverse){
-      digitalWrite(motor.pin1, LOW);
-      digitalWrite(motor.pin2, HIGH);
-    } else {
-      digitalWrite(motor.pin1, HIGH);
-      digitalWrite(motor.pin2, LOW);
-    }
-  }
+void motor_back(MOTOR motor){
+  digitalWrite(motor.pin1, LOW);
+  digitalWrite(motor.pin2, HIGH);
 }
 
 void motors_run(bool reverse){
   for (int i=0; i<3; i++){
     MOTOR cmotor = get_struct_motors(motors, i);
     if (reverse){
-      motor_forward(cmotor, true);
+      motor_back(cmotor);
     } else {
-      motor_forward(cmotor, false);
+      motor_forward(cmotor);
     }
   }
 }
-
 
 void motors_stop(){
   /**
@@ -306,5 +291,4 @@ void loop() {
   motors_stop();
   delay(10000);
 }
-
 
