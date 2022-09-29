@@ -51,6 +51,10 @@ struct US_RANGE_TRIGGER_PINS {
   int TRIGGER_FRONT, TRIGGER_RIGHT, TRIGGER_LEFT;
 };
 
+struct OPTICAL_SENSORS_PINS {
+  int front_right, front_left, rear_right, rear_left;
+};
+
 
 MOTOR left_motor = {PIN_MOTOR1P1, PIN_MOTOR1P2};
 MOTOR right_motor = {PIN_MOTOR2P1, PIN_MOTOR2P2};
@@ -59,6 +63,7 @@ MOTOR center_motor = {PIN_MOTOR3P1, PIN_MOTOR3P2};
 MOTORS motors = {left_motor, right_motor, center_motor};
 US_RANGE_ECHO_PINS echoes = {PIN_FRONT_RANGE_ECHO, PIN_RIGHT_RANGE_ECHO, PIN_LEFT_RANGE_ECHO};
 US_RANGE_TRIGGER_PINS triggers = {PIN_FRONT_RANGE_TRIGGER, PIN_RIGHT_RANGE_TRIGGER, PIN_LEFT_RANGE_TRIGGER};
+OPTICAL_SENSORS_PINS optics = {PIN_OPT_SENSOR_FR, PIN_OPT_SENSOR_FL, PIN_OPT_SENSOR_RR, PIN_OPT_SENSOR_RL};
 
 
 int get_struct_echo(US_RANGE_ECHO_PINS s, int i){
@@ -91,6 +96,16 @@ int get_struct_motor(MOTOR s, int i){
   switch(i) {
     case 0: return s.pin1;
     case 1: return s.pin2;
+    default: return -1;
+  }
+}
+
+int get_struct_optics(OPTICAL_SENSORS_PINS s, int i){
+  switch(i) {
+    case 0: return s.front_right;
+    case 1: return s.front_left;
+    case 2: return s.rear_right;
+    case 3: return s.rear_left;
     default: return -1;
   }
 }
@@ -175,13 +190,50 @@ String read_US(){
   return buf;
 }
 
-// TODO
-bool on_the_edge(){
+struct ret_on_the_edge_f {
+  bool is_on_edge;
+  char *corner;
+};
+typedef struct ret_on_the_edge_f EF_RSTRUCT;
+
+// TODO: check if white is over 800 or under 200.
+EF_RSTRUCT on_the_edge(){
   /**
    * @brief Return true if device is on the edge of arena. (detects white line)
    * 
    */
-  return true;
+  int i;
+  EF_RSTRUCT ret;
+
+  for (i=0; i<4; i++){
+    int current_sensor_pin = get_struct_optics(optics, i);
+    int current_sensor_val = read_ROS(current_sensor_pin);
+    if (current_sensor_val > 800) { 
+      ret.is_on_edge = true;
+      break;
+    }
+  }
+
+  if (ret.is_on_edge){
+    switch(i) {
+      case 0:
+        ret.corner = "FR";
+        break;
+      case 1:
+        ret.corner = "FL";
+        break;
+      case 2:
+        ret.corner = "RR";
+        break;
+      case 3:
+        ret.corner = "RL";
+        break;
+      default:
+        break;
+    }
+  }
+
+  return ret;
 }
 
 void motor_forward(MOTOR motor){
