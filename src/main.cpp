@@ -224,13 +224,9 @@ void turn_left(){
 
   motors_stop();
 
-  // left motor
-  digitalWrite(PIN_MOTOR1P1, LOW);
-  digitalWrite(PIN_MOTOR1P2, HIGH);
-
-  // right motor
-  digitalWrite(PIN_MOTOR2P1, HIGH);
-  digitalWrite(PIN_MOTOR2P2, LOW);
+  // leave center neutral
+  motor_back(left_motor);
+  motor_forward(right_motor);
 }
 
 void turn_right(){
@@ -241,14 +237,9 @@ void turn_right(){
 
   motors_stop();
 
-  // left motor
-  digitalWrite(PIN_MOTOR1P1, HIGH);
-  digitalWrite(PIN_MOTOR1P2, LOW);
-
-  // right motor
-  digitalWrite(PIN_MOTOR2P1, LOW);
-  digitalWrite(PIN_MOTOR2P2, HIGH);
-
+  // leave center neutral
+  motor_forward(left_motor);
+  motor_back(right_motor);
 }
 
 void debug_log(){
