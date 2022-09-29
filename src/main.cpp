@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <assert.h>
-#include <AFMotor.h>
 
 // front-right
 #define PIN_OPT_SENSOR_FR A0
@@ -24,6 +22,24 @@
 #define RIGHT_RANGE 2
 #define LEFT_RANGE 3
 
+
+// Motors with 2x L298N motor drivers
+// left
+#define PIN_MOTOR1P1 8
+#define PIN_MOTOR1P2 9
+
+// right
+#define PIN_MOTOR2P1 10
+#define PIN_MOTOR2P2 11
+
+// center
+#define PIN_MOTOR3P1 12
+#define PIN_MOTOR3P2 13
+
+struct MOTOR_PINS {
+  int MOTOR1P1, MOTOR1P2, MOTOR2P1, MOTOR2P2, MOTOR3P1, MOTOR3P2;
+};
+
 struct US_RANGE_ECHO_PINS {
   int ECHO_FRONT, ECHO_RIGHT, ECHO_LEFT;
 };
@@ -32,6 +48,7 @@ struct US_RANGE_TRIGGER_PINS {
   int TRIGGER_FRONT, TRIGGER_RIGHT, TRIGGER_LEFT;
 };
 
+MOTOR_PINS motors = {PIN_MOTOR1P1, PIN_MOTOR1P2, PIN_MOTOR2P1, PIN_MOTOR2P2, PIN_MOTOR3P1, PIN_MOTOR3P2};
 US_RANGE_ECHO_PINS echoes = {PIN_FRONT_RANGE_ECHO, PIN_RIGHT_RANGE_ECHO, PIN_LEFT_RANGE_ECHO};
 US_RANGE_TRIGGER_PINS triggers = {PIN_FRONT_RANGE_TRIGGER, PIN_RIGHT_RANGE_TRIGGER, PIN_LEFT_RANGE_TRIGGER};
 
@@ -40,8 +57,8 @@ int get_struct_echo(US_RANGE_ECHO_PINS s, int i){
     case 0: return s.ECHO_FRONT;
     case 1: return s.ECHO_RIGHT;
     case 2: return s.ECHO_LEFT;
+    default: return -1;
   }
-  assert(0);
 }
 
 int get_struct_trigger(US_RANGE_TRIGGER_PINS s, int i){
@@ -49,8 +66,20 @@ int get_struct_trigger(US_RANGE_TRIGGER_PINS s, int i){
     case 0: return s.TRIGGER_FRONT;
     case 1: return s.TRIGGER_RIGHT;
     case 2: return s.TRIGGER_LEFT;
+    default: return -1;
   }
-  assert(0);
+}
+
+int get_struct_motors(MOTOR_PINS s, int i){
+  switch(i) {
+    case 0: return s.MOTOR1P1;
+    case 1: return s.MOTOR1P2;
+    case 2: return s.MOTOR2P1;
+    case 3: return s.MOTOR2P2;
+    case 4: return s.MOTOR3P1;
+    case 5: return s.MOTOR3P2;
+    default: return -1;
+  }
 }
 
 int calc_centrimeters(long duration){
@@ -138,13 +167,62 @@ bool on_the_edge(){
    * @brief Return true if device is on the edge of arena. (detects white line)
    * 
    */
+  return true;
+}
 
+void motors_stop(){
+  for (int i=0; i<6; i++){
+    int cpin = get_struct_motors(motors, i);
+    digitalWrite(cpin, LOW);
+  }
+}
+
+void motors_run(){
+  digitalWrite(PIN_MOTOR1P1, HIGH);
+  digitalWrite(PIN_MOTOR1P2, LOW);
+  digitalWrite(PIN_MOTOR2P1, HIGH);
+  digitalWrite(PIN_MOTOR2P2, LOW);
+  digitalWrite(PIN_MOTOR3P1, HIGH);
+  digitalWrite(PIN_MOTOR3P2, LOW);
+}
+
+void turn_left(){
+  // left motor
+  digitalWrite(PIN_MOTOR1P1, LOW);
+  digitalWrite(PIN_MOTOR1P2, HIGH);
+
+  // right motor
+  digitalWrite(PIN_MOTOR2P1, HIGH);
+  digitalWrite(PIN_MOTOR2P2, LOW);
+
+  // center 
+  digitalWrite(PIN_MOTOR3P1, LOW);
+  digitalWrite(PIN_MOTOR3P2, LOW);
+}
+
+void debug_log(){
+  Serial.println(read_ROS(PIN_OPT_SENSOR_FR));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_FL));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_RR));
+  Serial.println(read_ROS(PIN_OPT_SENSOR_RL));
+  Serial.println(read_US());
 }
 
 void setup() {
+  // setup ultrasonics
   for (int i=0; i<3; i++){
     pinMode(get_struct_echo(echoes, i), INPUT);
     pinMode(get_struct_trigger(triggers, i), OUTPUT);
+  }
+
+  // setup motors
+  for (int i=0; i<6; i++){
+    int cpin = get_struct_motors(motors, i);
+
+    // set initial state
+    pinMode(cpin, OUTPUT);
+    digitalWrite(cpin, LOW);
+
   }
 
   Serial.begin(9600);
@@ -152,10 +230,10 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(read_ROS(PIN_OPT_SENSOR_FR));
-  Serial.println(read_ROS(PIN_OPT_SENSOR_FL));
-  Serial.println(read_ROS(PIN_OPT_SENSOR_RR));
-  Serial.println(read_ROS(PIN_OPT_SENSOR_RL));
-  Serial.println(read_US());
-  delay(1000);
+  //debug_log();
+  motors_run();
+  delay(10000);
+  motors_stop();
+  delay(10000);
+  //delay(2000);
 }
