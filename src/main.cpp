@@ -36,8 +36,12 @@
 #define PIN_MOTOR3P1 12
 #define PIN_MOTOR3P2 13
 
-struct MOTOR_PINS {
-  int MOTOR1P1, MOTOR1P2, MOTOR2P1, MOTOR2P2, MOTOR3P1, MOTOR3P2;
+struct MOTOR {
+  int pin1, pin2;
+};
+
+struct MOTORS {
+  MOTOR motor1, motor2, motor3;
 };
 
 struct US_RANGE_ECHO_PINS {
@@ -48,9 +52,15 @@ struct US_RANGE_TRIGGER_PINS {
   int TRIGGER_FRONT, TRIGGER_RIGHT, TRIGGER_LEFT;
 };
 
-MOTOR_PINS motors = {PIN_MOTOR1P1, PIN_MOTOR1P2, PIN_MOTOR2P1, PIN_MOTOR2P2, PIN_MOTOR3P1, PIN_MOTOR3P2};
+
+MOTOR left_motor = {PIN_MOTOR1P1, PIN_MOTOR1P2};
+MOTOR right_motor = {PIN_MOTOR2P1, PIN_MOTOR2P2};
+MOTOR center_motor = {PIN_MOTOR3P1, PIN_MOTOR3P2};
+
+MOTORS motors = {left_motor, right_motor, center_motor};
 US_RANGE_ECHO_PINS echoes = {PIN_FRONT_RANGE_ECHO, PIN_RIGHT_RANGE_ECHO, PIN_LEFT_RANGE_ECHO};
 US_RANGE_TRIGGER_PINS triggers = {PIN_FRONT_RANGE_TRIGGER, PIN_RIGHT_RANGE_TRIGGER, PIN_LEFT_RANGE_TRIGGER};
+
 
 int get_struct_echo(US_RANGE_ECHO_PINS s, int i){
   switch(i) {
@@ -70,14 +80,18 @@ int get_struct_trigger(US_RANGE_TRIGGER_PINS s, int i){
   }
 }
 
-int get_struct_motors(MOTOR_PINS s, int i){
+MOTOR get_struct_motors(MOTORS s, int i){
   switch(i) {
-    case 0: return s.MOTOR1P1;
-    case 1: return s.MOTOR1P2;
-    case 2: return s.MOTOR2P1;
-    case 3: return s.MOTOR2P2;
-    case 4: return s.MOTOR3P1;
-    case 5: return s.MOTOR3P2;
+    case 0: return s.motor1;
+    case 1: return s.motor2;
+    case 2: return s.motor3;
+  }
+}
+
+int get_struct_motor(MOTOR s, int i){
+  switch(i) {
+    case 0: return s.pin1;
+    case 1: return s.pin2;
     default: return -1;
   }
 }
@@ -172,21 +186,42 @@ bool on_the_edge(){
 
 void motors_stop(){
   for (int i=0; i<6; i++){
-    int cpin = get_struct_motors(motors, i);
-    digitalWrite(cpin, LOW);
+    MOTOR cmotor = get_struct_motors(motors, i);
+    digitalWrite(cmotor.pin1, LOW);
+    digitalWrite(cmotor.pin2, LOW);
   }
 }
 
 void motors_run(){
-  digitalWrite(PIN_MOTOR1P1, HIGH);
-  digitalWrite(PIN_MOTOR1P2, LOW);
-  digitalWrite(PIN_MOTOR2P1, HIGH);
-  digitalWrite(PIN_MOTOR2P2, LOW);
-  digitalWrite(PIN_MOTOR3P1, HIGH);
-  digitalWrite(PIN_MOTOR3P2, LOW);
+  for (int i=0; i<3; i++){
+    MOTOR cmotor = get_struct_motors(motors, i);
+    Serial.println(cmotor.pin1);
+    Serial.println(cmotor.pin2);
+    digitalWrite(cmotor.pin1, HIGH);
+    digitalWrite(cmotor.pin2, LOW);
+  }
+}
+
+void move_forward(MOTOR motor, bool reverse){
+  for (int i=0; i<2; i++){
+    if (!reverse){
+      digitalWrite(motor.pin1, HIGH);
+      digitalWrite(motor.pin2, LOW);
+    } else {
+      digitalWrite(motor.pin1, LOW);
+      digitalWrite(motor.pin2, HIGH);
+    }
+  }
 }
 
 void turn_left(){
+  /**
+   * @brief Left, and right motors rotating in opposite directions.
+   *        Center motor should be neutral.
+   */
+
+  motors_stop();
+
   // left motor
   digitalWrite(PIN_MOTOR1P1, LOW);
   digitalWrite(PIN_MOTOR1P2, HIGH);
@@ -194,10 +229,24 @@ void turn_left(){
   // right motor
   digitalWrite(PIN_MOTOR2P1, HIGH);
   digitalWrite(PIN_MOTOR2P2, LOW);
+}
 
-  // center 
-  digitalWrite(PIN_MOTOR3P1, LOW);
-  digitalWrite(PIN_MOTOR3P2, LOW);
+void turn_right(){
+  /**
+   * @brief Left, and right motors rotating in opposite directions.
+   *        Center motor should be neutral.
+   */
+
+  motors_stop();
+
+  // left motor
+  digitalWrite(PIN_MOTOR1P1, HIGH);
+  digitalWrite(PIN_MOTOR1P2, LOW);
+
+  // right motor
+  digitalWrite(PIN_MOTOR2P1, LOW);
+  digitalWrite(PIN_MOTOR2P2, HIGH);
+
 }
 
 void debug_log(){
@@ -217,12 +266,13 @@ void setup() {
 
   // setup motors
   for (int i=0; i<6; i++){
-    int cpin = get_struct_motors(motors, i);
+    MOTOR cmotor = get_struct_motors(motors, i);
 
     // set initial state
-    pinMode(cpin, OUTPUT);
-    digitalWrite(cpin, LOW);
-
+    pinMode(cmotor.pin1, OUTPUT);
+    pinMode(cmotor.pin2, OUTPUT);
+    digitalWrite(cmotor.pin1, LOW);
+    digitalWrite(cmotor.pin2, LOW);
   }
 
   Serial.begin(9600);
@@ -232,8 +282,5 @@ void setup() {
 void loop() {
   //debug_log();
   motors_run();
-  delay(10000);
-  motors_stop();
-  delay(10000);
-  //delay(2000);
+  delay(100000);
 }
