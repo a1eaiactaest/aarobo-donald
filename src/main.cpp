@@ -192,7 +192,7 @@ String read_US(){
 
 struct ret_on_the_edge_f {
   bool is_on_edge;
-  char *corner;
+  char corner[4];
 };
 typedef struct ret_on_the_edge_f EF_RSTRUCT;
 
@@ -223,16 +223,16 @@ EF_RSTRUCT on_the_edge(){
   if (ret.is_on_edge){
     switch(i) {
       case 0:
-        ret.corner = "FR";
+        strcpy(ret.corner,"FR");
         break;
       case 1:
-        ret.corner = "FL";
+        strcpy(ret.corner, "FL");
         break;
       case 2:
-        ret.corner = "RR";
+        strcpy(ret.corner, "RR");
         break;
       case 3:
-        ret.corner = "RL";
+        strcpy(ret.corner, "RL");
         break;
       default:
         break;
