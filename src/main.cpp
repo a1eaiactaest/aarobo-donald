@@ -190,58 +190,6 @@ String read_US(){
   return buf;
 }
 
-struct ret_on_the_edge_f {
-  bool is_on_edge;
-  char corner[4];
-};
-typedef struct ret_on_the_edge_f EF_RSTRUCT;
-
-// TODO: check if white is over 800 or under 200.
-EF_RSTRUCT on_the_edge(){
-  /**
-   * @brief Return true if device is on the edge of arena. (detects white line)
-   * @return Struct EF_RSTRUCT which consists of a bool: is_on_edge; and char buffer: corner;
-   *         return variable: corner is one of four:
-   *          - "FR"
-   *          - "FL"
-   *          - "RR"
-   *          - "RL"
-   *          which respectively stands for: front-right, front-left, rear-right, rear-left.
-   */
-  int i;
-  EF_RSTRUCT ret;
-
-  for (i=0; i<4; i++){
-    int current_sensor_pin = get_struct_optics(optics, i);
-    int current_sensor_val = read_ROS(current_sensor_pin);
-    if (current_sensor_val > 800) {
-      ret.is_on_edge = true;
-      break;
-    }
-  }
-
-  if (ret.is_on_edge){
-    switch(i) {
-      case 0:
-        strcpy(ret.corner,"FR");
-        break;
-      case 1:
-        strcpy(ret.corner, "FL");
-        break;
-      case 2:
-        strcpy(ret.corner, "RR");
-        break;
-      case 3:
-        strcpy(ret.corner, "RL");
-        break;
-      default:
-        break;
-    }
-  }
-
-  return ret;
-}
-
 void motor_forward(MOTOR motor){
   digitalWrite(motor.pin1, HIGH);
   digitalWrite(motor.pin2, LOW);
@@ -298,6 +246,65 @@ void turn_right(){
   // leave center neutral
   motor_forward(left_motor);
   motor_back(right_motor);
+}
+
+struct ret_on_the_edge_f {
+  bool is_on_edge;
+  char corner[4];
+};
+typedef struct ret_on_the_edge_f EF_RSTRUCT;
+
+// TODO: check if white is over 800 or under 200.
+EF_RSTRUCT on_the_edge(){
+  /**
+   * @brief Return true if device is on the edge of arena. (detects white line)
+   * @return Struct EF_RSTRUCT which consists of a bool: is_on_edge; and char buffer: corner;
+   *         return variable: corner is one of four:
+   *          - "FR"
+   *          - "FL"
+   *          - "RR"
+   *          - "RL"
+   *          which respectively stands for: front-right, front-left, rear-right, rear-left.
+   */
+  int i;
+  EF_RSTRUCT ret;
+
+  for (i=0; i<4; i++){
+    int current_sensor_pin = get_struct_optics(optics, i);
+    int current_sensor_val = read_ROS(current_sensor_pin);
+    if (current_sensor_val > 800) {
+      ret.is_on_edge = true;
+      break;
+    }
+  }
+
+  if (ret.is_on_edge){
+    switch(i) {
+      case 0:
+        strcpy(ret.corner,"FR");
+        break;
+      case 1:
+        strcpy(ret.corner, "FL");
+        break;
+      case 2:
+        strcpy(ret.corner, "RR");
+        break;
+      case 3:
+        strcpy(ret.corner, "RL");
+        break;
+      default:
+        break;
+    }
+  } else {
+    strcpy(ret.corner, "NULL");
+  }
+
+  /*
+  * Example return state:
+  * (false, "NULL")
+  * (true, "RR")
+  */
+  return ret;
 }
 
 void debug_log(){
