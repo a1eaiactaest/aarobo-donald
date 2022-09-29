@@ -184,25 +184,8 @@ bool on_the_edge(){
   return true;
 }
 
-void motors_stop(){
-  for (int i=0; i<6; i++){
-    MOTOR cmotor = get_struct_motors(motors, i);
-    digitalWrite(cmotor.pin1, LOW);
-    digitalWrite(cmotor.pin2, LOW);
-  }
-}
 
-void motors_run(){
-  for (int i=0; i<3; i++){
-    MOTOR cmotor = get_struct_motors(motors, i);
-    Serial.println(cmotor.pin1);
-    Serial.println(cmotor.pin2);
-    digitalWrite(cmotor.pin1, HIGH);
-    digitalWrite(cmotor.pin2, LOW);
-  }
-}
-
-void move_forward(MOTOR motor, bool reverse){
+void motor_forward(MOTOR motor, bool reverse){
   for (int i=0; i<2; i++){
     if (!reverse){
       digitalWrite(motor.pin1, HIGH);
@@ -211,6 +194,38 @@ void move_forward(MOTOR motor, bool reverse){
       digitalWrite(motor.pin1, LOW);
       digitalWrite(motor.pin2, HIGH);
     }
+  }
+}
+
+void motor_back(MOTOR motor, bool reverse){
+  for (int i=0; i<2; i++){
+    if (!reverse){
+      digitalWrite(motor.pin1, LOW);
+      digitalWrite(motor.pin2, HIGH);
+    } else {
+      digitalWrite(motor.pin1, HIGH);
+      digitalWrite(motor.pin2, LOW);
+    }
+  }
+}
+
+void motors_run(bool reverse){
+  for (int i=0; i<3; i++){
+    MOTOR cmotor = get_struct_motors(motors, i);
+    if (reverse){
+      motor_forward(cmotor, true);
+    } else {
+      motor_forward(cmotor, false);
+    }
+  }
+}
+
+
+void motors_stop(){
+  for (int i=0; i<6; i++){
+    MOTOR cmotor = get_struct_motors(motors, i);
+    digitalWrite(cmotor.pin1, LOW);
+    digitalWrite(cmotor.pin2, LOW);
   }
 }
 
@@ -281,6 +296,8 @@ void setup() {
 
 void loop() {
   //debug_log();
-  motors_run();
-  delay(100000);
+  delay(10000);
+  motors_run(false); //forward
+  delay(10000);
+  motors_run(true); // back
 }
