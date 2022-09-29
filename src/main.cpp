@@ -200,7 +200,13 @@ typedef struct ret_on_the_edge_f EF_RSTRUCT;
 EF_RSTRUCT on_the_edge(){
   /**
    * @brief Return true if device is on the edge of arena. (detects white line)
-   * 
+   * @return Struct EF_RSTRUCT which consists of a bool: is_on_edge; and char buffer: corner;
+   *         return variable: corner is one of four:
+   *          - "FR"
+   *          - "FL"
+   *          - "RR"
+   *          - "RL"
+   *          which respectively stands for: front-right, front-left, rear-right, rear-left.
    */
   int i;
   EF_RSTRUCT ret;
@@ -208,7 +214,7 @@ EF_RSTRUCT on_the_edge(){
   for (i=0; i<4; i++){
     int current_sensor_pin = get_struct_optics(optics, i);
     int current_sensor_val = read_ROS(current_sensor_pin);
-    if (current_sensor_val > 800) { 
+    if (current_sensor_val > 800) {
       ret.is_on_edge = true;
       break;
     }
