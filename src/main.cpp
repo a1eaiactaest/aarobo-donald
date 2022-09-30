@@ -35,6 +35,10 @@
 #define PIN_MOTOR3P1 12
 #define PIN_MOTOR3P2 13
 
+// always set to START state
+bool START = true;
+
+const int SCAN_THRESHOLD = 50; // cm
 struct MOTOR {
   int pin1, pin2;
 };
@@ -65,6 +69,12 @@ struct ret_on_the_edge_f {
 };
 
 typedef struct ret_on_the_edge_f EF_RSTRUCT;
+
+struct ret_read_US_f {
+  int front, right, left;
+};
+
+typedef struct ret_read_US_f UF_RSTRUCT;
 
 MOTOR left_motor = {PIN_MOTOR1P1, PIN_MOTOR1P2};
 MOTOR right_motor = {PIN_MOTOR2P1, PIN_MOTOR2P2};
@@ -189,15 +199,25 @@ int read_ROS(int analog_pin){
   return sensor_val;
 }
 
-String read_US(){
-  char buf[40];
+UF_RSTRUCT read_US(){
+  UF_RSTRUCT ret;
 
   int front_cm = get_distance(FRONT_RANGE);
   int right_cm = get_distance(RIGHT_RANGE);
   int left_cm = get_distance(LEFT_RANGE);
 
-  snprintf(buf, sizeof(buf), "FRONT: %d, RIGHT: %d, LEFT: %d", front_cm, right_cm, left_cm);
-  return buf;
+  ret.front = front_cm;
+  ret.right = right_cm;
+  ret.left = left_cm;
+
+  return ret;
+}
+
+void pretty_print_US(){
+  char buf[40];
+  UF_RSTRUCT sides = read_US();
+  snprintf(buf, sizeof(buf), "FRONT: %d, RIGHT: %d, LEFT: %d", sides.front, sides.right, sides.left);
+  Serial.println(buf);
 }
 
 void motor_forward(MOTOR motor){
@@ -232,7 +252,7 @@ void motors_stop(){
   }
 }
 
-void turn_left(){
+void turn_left(int time){
   /**
    * @brief Left, and right motors rotating in opposite directions.
    *        Center motor should be neutral.
@@ -243,9 +263,13 @@ void turn_left(){
   // leave center neutral
   motor_back(left_motor);
   motor_forward(right_motor);
+  if (time != 0){
+    delay(time);
+    motors_stop();
+  }
 }
 
-void turn_right(){
+void turn_right(int time){
   /**
    * @brief Left, and right motors rotating in opposite directions.
    *        Center motor should be neutral.
@@ -256,6 +280,14 @@ void turn_right(){
   // leave center neutral
   motor_forward(left_motor);
   motor_back(right_motor);
+  if (time != 0){
+    delay(time);
+    motors_stop();
+  }
+}
+
+void full_turn(){
+  turn_right(4000);
 }
 
 void pretty_print_OS_state(OS_state state){
@@ -281,7 +313,7 @@ EF_RSTRUCT on_the_edge(OS_state state){
    *          - "RL"
    *          which respectively stands for: front-right, front-left, rear-right, rear-left.
    */
-  int x, i, current_sensor_val;
+  int i, current_sensor_val;
   EF_RSTRUCT ret;
 
   for (i=0; i<4; i++){
@@ -325,38 +357,59 @@ EF_RSTRUCT on_the_edge(OS_state state){
   return ret;
 }
 
-// TODO: time turns
-void handle_edge(){
-  OS_state optical_sensors_state;
-  EF_RSTRUCT state = on_the_edge(optical_sensors_state);
+bool enemy_in_front(){
+  UF_RSTRUCT state = read_US();
+  int front = state.front;
 
-  if (state.is_on_edge){
-    if (state.state.front_right == true){
-      // if front-right -> reverse and turn left.
-      motors_run(true); // reverse for 5s
-      delay(5000);
-      turn_right(); // turn right for 3s
-      delay(3000);
-    } else if (state.state.front_left == true){
-      // if front-left -> reverse and turn right.
-      motors_run(true);
-      delay(5000);
-      turn_left();
-      delay(300);
-    } else if (state.state.rear_right == true){
-      // if rear-right -> go forward and turn left.
-      motors_run(false);
-      delay(5000);
-      turn_left();
-      delay(3000);
-    } else if (state.state.rear_left == true){
-      // if rear-left -> go forward and turn right.
-      motors_run(false);
-      delay(5000);
-      turn_left();
-      delay(3000);
+  if (front < SCAN_THRESHOLD){
+    return true;
+  }
+  return false;
+}
+
+void radar_mode(){
+  bool found = false;
+  while (!found){
+    turn_right(0);
+    if (enemy_in_front()){
+      found = true;
     }
-    motors_stop();
+  }
+  motors_run(false);
+}
+
+void scan_for_enemy(){
+  UF_RSTRUCT state = read_US();
+
+  int front = state.front;
+  int right = state.right;
+  int left = state.left;
+
+  pretty_print_US();
+
+  // due to rules first, scan sides
+  if (START){
+    if (right < SCAN_THRESHOLD){
+      turn_right(1000);
+      motors_run(false);
+    } else if (left < SCAN_THRESHOLD){
+      turn_left(1000);
+      motors_run(false);
+    }
+    START = false;
+  } else {
+    if (front < SCAN_THRESHOLD){
+      motors_run(false);
+    } else if (right < SCAN_THRESHOLD){
+      turn_right(1000);
+      motors_run(false);
+    } else if (left < SCAN_THRESHOLD){
+      turn_left(1000);
+      motors_run(false);
+    }
+    else {
+      radar_mode();
+    }
   }
 }
 
@@ -365,7 +418,6 @@ void debug_log(){
   Serial.println(read_ROS(PIN_OPT_SENSOR_FL));
   Serial.println(read_ROS(PIN_OPT_SENSOR_RR));
   Serial.println(read_ROS(PIN_OPT_SENSOR_RL));
-  Serial.println(read_US());
 }
 
 void setup() {
@@ -391,7 +443,5 @@ void setup() {
 }
 
 void loop() {
-  handle_edge();
-  delay(1000);
+  scan_for_enemy();
 }
-
