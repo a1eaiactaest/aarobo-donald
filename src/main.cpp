@@ -55,6 +55,16 @@ struct OPTICAL_SENSORS_PINS {
   int front_right, front_left, rear_right, rear_left;
 };
 
+struct OS_state {
+  bool front_right, front_left, rear_right, rear_left;
+};
+
+struct ret_on_the_edge_f {
+  bool is_on_edge;
+  OS_state state;
+};
+
+typedef struct ret_on_the_edge_f EF_RSTRUCT;
 
 MOTOR left_motor = {PIN_MOTOR1P1, PIN_MOTOR1P2};
 MOTOR right_motor = {PIN_MOTOR2P1, PIN_MOTOR2P2};
@@ -248,14 +258,19 @@ void turn_right(){
   motor_back(right_motor);
 }
 
-struct ret_on_the_edge_f {
-  bool is_on_edge;
-  char corner[4];
-};
-typedef struct ret_on_the_edge_f EF_RSTRUCT;
+void pretty_print_OS_state(OS_state state){
+  char buf[128];
+  bool front_right = state.front_right;
+  bool front_left = state.front_left;
+  bool rear_right = state.rear_right;
+  bool rear_left = state.rear_left;
+  snprintf(buf, sizeof(buf), "front-right: %d; front-left: %d \nrear-right: %d; rear-left: %d;\n",
+          front_right, front_left, rear_right, rear_left);
+  Serial.println(buf);
+}
 
 // TODO: check if white is over 800 or under 200.
-EF_RSTRUCT on_the_edge(){
+EF_RSTRUCT on_the_edge(OS_state state){
   /**
    * @brief Return true if device is on the edge of arena. (detects white line)
    * @return Struct EF_RSTRUCT which consists of a bool: is_on_edge; and char buffer: corner;
@@ -266,7 +281,7 @@ EF_RSTRUCT on_the_edge(){
    *          - "RL"
    *          which respectively stands for: front-right, front-left, rear-right, rear-left.
    */
-  int i, current_sensor_val;
+  int x, i, current_sensor_val;
   EF_RSTRUCT ret;
 
   for (i=0; i<4; i++){
@@ -281,30 +296,68 @@ EF_RSTRUCT on_the_edge(){
   if (ret.is_on_edge){
     switch(i) {
       case 0:
-        strcpy(ret.corner,"FR");
+        // front-right
+        state.front_right = true;
         break;
       case 1:
-        strcpy(ret.corner, "FL");
+        // front-left
+        state.front_left = true;
         break;
       case 2:
-        strcpy(ret.corner, "RR");
+        // rear-right
+        state.rear_right = true;
         break;
       case 3:
-        strcpy(ret.corner, "RL");
+        // rear-left
+        state.rear_left = true;
         break;
-      default:
-        break;
+      default: break;
     }
-  } else {
-    strcpy(ret.corner, "NULL");
   }
+  ret.state = state;
+  pretty_print_OS_state(state);
 
   /*
   * Example return state:
-  * (false, "NULL")
-  * (true, "RR")
+  * (false, 0b0000)
+  * (true, )
   */
   return ret;
+}
+
+// TODO: time turns
+void handle_edge(){
+  OS_state optical_sensors_state;
+  EF_RSTRUCT state = on_the_edge(optical_sensors_state);
+
+  if (state.is_on_edge){
+    if (state.state.front_right == true){
+      // if front-right -> reverse and turn left.
+      motors_run(true); // reverse for 5s
+      delay(5000);
+      turn_right(); // turn right for 3s
+      delay(3000);
+    } else if (state.state.front_left == true){
+      // if front-left -> reverse and turn right.
+      motors_run(true);
+      delay(5000);
+      turn_left();
+      delay(300);
+    } else if (state.state.rear_right == true){
+      // if rear-right -> go forward and turn left.
+      motors_run(false);
+      delay(5000);
+      turn_left();
+      delay(3000);
+    } else if (state.state.rear_left == true){
+      // if rear-left -> go forward and turn right.
+      motors_run(false);
+      delay(5000);
+      turn_left();
+      delay(3000);
+    }
+    motors_stop();
+  }
 }
 
 void debug_log(){
@@ -338,13 +391,7 @@ void setup() {
 }
 
 void loop() {
-  //debug_log();
-  delay(10000);
-  motors_run(false); //forward
-  delay(10000);
-  motors_run(true); // back
-  delay(10000);
-  motors_stop();
-  delay(10000);
+  handle_edge();
+  delay(1000);
 }
 
