@@ -266,13 +266,13 @@ EF_RSTRUCT on_the_edge(){
    *          - "RL"
    *          which respectively stands for: front-right, front-left, rear-right, rear-left.
    */
-  int i;
+  int i, current_sensor_val;
   EF_RSTRUCT ret;
 
   for (i=0; i<4; i++){
     int current_sensor_pin = get_struct_optics(optics, i);
-    int current_sensor_val = read_ROS(current_sensor_pin);
-    if (current_sensor_val > 800) {
+    current_sensor_val = read_ROS(current_sensor_pin);
+    if (current_sensor_val < 100) { // black is around 100, good black is under
       ret.is_on_edge = true;
       break;
     }
