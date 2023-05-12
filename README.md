@@ -1,4 +1,5 @@
 ![aarobo-donald](docs/donald.jpeg)
+![bots](docs/bots.jpg)
 
 # Aarobo Donald
 
